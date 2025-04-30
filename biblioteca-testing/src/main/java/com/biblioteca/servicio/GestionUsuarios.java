@@ -19,8 +19,20 @@ public class GestionUsuarios {
     }
 
     public void registrarUsuario(String nombre) {
-        System.out.println(">>> Lógica de registrarUsuario PENDIENTE <<<");
-        throw new UnsupportedOperationException("registrarUsuario no implementado todavía.");
+        Objects.requireNonNull(nombre, "El nombre de usuario no puede ser nulo.");
+        if (nombre.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre de usuario no puede estar vacío.");
+        }
+
+        if (usuariosRegistrados.containsKey(nombre)) {
+            throw new IllegalArgumentException("El nombre de usuario '" + nombre + "' ya está registrado.");
+        }
+
+        Usuario nuevoUsuario = new Usuario(nombre);
+
+        usuariosRegistrados.put(nombre, nuevoUsuario);
+
+        System.out.println("INFO: Usuario '" + nombre + "' registrado exitosamente.");
     }
 
     public void registrarPrestamo(String nombreUsuario, String isbn) {
