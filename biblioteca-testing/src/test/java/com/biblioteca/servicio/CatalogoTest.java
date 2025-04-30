@@ -66,4 +66,23 @@ class CatalogoTest {
         assertEquals(3, catalogo.obtenerTodosLosLibros().size(), "La cantidad de libros no debería cambiar si falla la adición.");
     }
 
+    @Test
+    @DisplayName("Buscar por ISBN existente devuelve el libro correcto")
+    void testBuscarPorIsbnExistente() {
+        String isbnBuscado = "978-1";
+        Libro libroEncontrado = catalogo.buscarPorIsbn(isbnBuscado);
+
+        assertNotNull(libroEncontrado, "Debería encontrar un libro con ISBN existente.");
+        assertEquals(libro1_disponible.getIsbn(), libroEncontrado.getIsbn(), "El ISBN del libro encontrado no coincide.");
+        assertEquals(libro1_disponible.getTitulo(), libroEncontrado.getTitulo(), "El título del libro encontrado no coincide.");
+    }
+
+    @Test
+    @DisplayName("Buscar por ISBN no existente devuelve null")
+    void testBuscarPorIsbnNoExistente() {
+        String isbnInexistente = "000-000-000-X";
+        Libro libroEncontrado = catalogo.buscarPorIsbn(isbnInexistente);
+        assertNull(libroEncontrado, "No debería encontrar un libro con ISBN inexistente.");
+    }
+
 }
