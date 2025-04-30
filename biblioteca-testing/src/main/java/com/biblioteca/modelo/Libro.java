@@ -11,7 +11,7 @@ public class Libro {
 
     public Libro(String isbn, String titulo, String autor) {
         this.isbn = Objects.requireNonNull(isbn, "El ISBN no puede ser nulo.");
-        this.titulo = Objects.requireNonNull(titulo, "El título не может быть пустым.");
+        this.titulo = Objects.requireNonNull(titulo, "El título no puede ser nulo.");
         this.autor = Objects.requireNonNull(autor, "El autor no puede ser nulo.");
 
         if (isbn.trim().isEmpty() || titulo.trim().isEmpty() || autor.trim().isEmpty()) {
@@ -38,7 +38,7 @@ public class Libro {
     }
 
     public void setEstado(EstadoLibro nuevoEstado) {
-        this.estado = Objects.requireNonNull(nuevoEstado, "El nuevo estado не может быть пустым.");
+        this.estado = Objects.requireNonNull(nuevoEstado, "El nuevo estado no puede ser nulo.");
     }
 
     @Override
