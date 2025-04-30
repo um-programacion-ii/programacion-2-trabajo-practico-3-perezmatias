@@ -46,4 +46,22 @@ class SistemaPrestamosTest {
 
     }
 
+    @Test
+    @DisplayName("Prestar libro con ISBN inexistente lanza LibroNoEncontradoException")
+    void testPrestarLibroNoEncontrado() {
+        String isbnInexistente = "ISBN-QUE-NO-EXISTE";
+
+        when(catalogoMock.buscarPorIsbn(isbnInexistente)).thenReturn(null);
+
+        LibroNoEncontradoException exception = assertThrows(LibroNoEncontradoException.class, () -> {
+            sistemaPrestamos.prestarLibro(isbnInexistente);
+        }, "Debería lanzarse LibroNoEncontradoException si el ISBN no existe.");
+
+        assertTrue(exception.getMessage().contains(isbnInexistente),
+                "El mensaje de la excepción debería mencionar el ISBN no encontrado.");
+
+        verify(catalogoMock).buscarPorIsbn(isbnInexistente);
+
+    }
+
 }
