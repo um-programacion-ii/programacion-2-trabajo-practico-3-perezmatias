@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import com.biblioteca.modelo.Usuario;
+import com.biblioteca.excepciones.LibroNoEncontradoException;
+import com.biblioteca.excepciones.LibroNoDisponibleException;
 
 public class GestionUsuarios {
 
@@ -36,12 +39,36 @@ public class GestionUsuarios {
     }
 
     public void registrarPrestamo(String nombreUsuario, String isbn) {
-        System.out.println(">>> Lógica de registrarPrestamo PENDIENTE <<<");
-        throw new UnsupportedOperationException("registrarPrestamo no implementado todavía.");
+        Objects.requireNonNull(nombreUsuario, "El nombre de usuario no puede ser nulo.");
+        Objects.requireNonNull(isbn, "El ISBN no puede ser nulo.");
+
+        Usuario usuario = usuariosRegistrados.get(nombreUsuario);
+
+        if (usuario == null) {
+            throw new UsuarioNoEncontradoException("Usuario con nombre '" + nombreUsuario + "' no encontrado.");
+        }
+
+        Prestamo prestamoRealizado;
+        try {
+            prestamoRealizado = sistemaPrestamos.prestarLibro(isbn);
+        } catch (LibroNoEncontradoException | LibroNoDisponibleException e) {
+            System.err.println("Error al intentar prestar libro para el usuario '" + nombreUsuario + "': " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error inesperado en sistemaPrestamos.prestarLibro: " + e.getMessage());
+            throw new RuntimeException("Error inesperado durante el proceso de préstamo.", e);
+        }
+
+        if (prestamoRealizado != null) {
+            usuario.agregarPrestamoAlHistorial(prestamoRealizado);
+            System.out.println("INFO: Préstamo (Libro: " + isbn + ") registrado en el historial de Usuario: " + nombreUsuario);
+        } else {
+            System.err.println("ADVERTENCIA: sistemaPrestamos.prestarLibro devolvió null sin lanzar excepción.");
+        }
     }
 
     public Optional<Usuario> buscarUsuarioPorNombre(String nombre) {
-        throw new UnsupportedOperationException("buscarUsuarioPorNombre no implementado todavía.");
+        return Optional.ofNullable(usuariosRegistrados.get(nombre));
     }
 
 }
