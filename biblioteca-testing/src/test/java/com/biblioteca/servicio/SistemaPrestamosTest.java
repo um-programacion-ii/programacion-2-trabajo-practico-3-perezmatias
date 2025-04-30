@@ -64,4 +64,28 @@ class SistemaPrestamosTest {
 
     }
 
+    @Test
+    @DisplayName("Prestar libro existente pero NO disponible lanza LibroNoDisponibleException")
+    void testPrestarLibroNoDisponible() {
+        String isbnPrestado = "978-PRESTADO";
+        Libro libroDePruebaPrestado = new Libro(isbnPrestado, "Libro Ya Prestado", "Autor Ocupado");
+        libroDePruebaPrestado.setEstado(EstadoLibro.PRESTADO);
+
+        when(catalogoMock.buscarPorIsbn(isbnPrestado)).thenReturn(libroDePruebaPrestado);
+
+        LibroNoDisponibleException exception = assertThrows(LibroNoDisponibleException.class, () -> {
+            sistemaPrestamos.prestarLibro(isbnPrestado);
+        }, "Debería lanzarse LibroNoDisponibleException si el libro no está DISPONIBLE.");
+
+        assertTrue(exception.getMessage().contains(isbnPrestado) || exception.getMessage().contains(libroDePruebaPrestado.getTitulo()),
+                "El mensaje de excepción debería mencionar el libro no disponible.");
+        assertTrue(exception.getMessage().contains(EstadoLibro.PRESTADO.toString()),
+                "El mensaje de la excepción debería mencionar el estado PRESTADO.");
+
+        verify(catalogoMock).buscarPorIsbn(isbnPrestado);
+
+        assertEquals(EstadoLibro.PRESTADO, libroDePruebaPrestado.getEstado(),
+                "El estado del libro no debería cambiar si el préstamo falló.");
+    }
+
 }
