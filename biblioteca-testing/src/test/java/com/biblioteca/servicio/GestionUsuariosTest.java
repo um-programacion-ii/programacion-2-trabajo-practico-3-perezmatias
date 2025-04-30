@@ -70,4 +70,21 @@ class GestionUsuariosTest {
 
     }
 
+    @Test
+    @DisplayName("registrarPrestamo lanza UsuarioNoEncontradoException si el usuario no existe")
+    void testRegistrarPrestamoUsuarioNoEncontrado() {
+        String nombreUsuarioInexistente = "Fantasma";
+        String cualquierIsbn = "123-456";
+
+        UsuarioNoEncontradoException exception = assertThrows(UsuarioNoEncontradoException.class, () -> {
+            gestionUsuarios.registrarPrestamo(nombreUsuarioInexistente, cualquierIsbn);
+        }, "Debería lanzarse UsuarioNoEncontradoException si el usuario no está registrado.");
+
+        assertTrue(exception.getMessage().contains(nombreUsuarioInexistente),
+                "El mensaje de excepción debería mencionar el nombre del usuario no encontrado.");
+
+        verifyNoInteractions(sistemaPrestamosMock);
+    }
+
+
 }
