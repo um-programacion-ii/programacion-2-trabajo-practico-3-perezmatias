@@ -111,5 +111,31 @@ class GestionUsuariosTest {
         assertTrue(usuario.getHistorialPrestamos().isEmpty(), "El historial del usuario debería estar vacío si el préstamo falló.");
     }
 
+    @Test
+    @DisplayName("registrarPrestamo lanza LibroNoDisponibleException si SistemaPrestamos la lanza")
+    void testRegistrarPrestamoCuandoPrestarLibroLanzaLibroNoDisponible() {
+
+        String nombreUsuarioExistente = "UsuarioParaTestExcepcion2";
+        String isbnNoDisponible = "ISBN-NO-DISPONIBLE";
+        String mensajeErrorEsperado = "Mock: Libro no disponible ISBN: " + isbnNoDisponible;
+
+        assertDoesNotThrow(() -> gestionUsuarios.registrarUsuario(nombreUsuarioExistente));
+
+        when(sistemaPrestamosMock.prestarLibro(isbnNoDisponible))
+                .thenThrow(new LibroNoDisponibleException(mensajeErrorEsperado));
+
+        LibroNoDisponibleException exception = assertThrows(LibroNoDisponibleException.class, () -> {
+            gestionUsuarios.registrarPrestamo(nombreUsuarioExistente, isbnNoDisponible);
+        }, "Debería lanzarse LibroNoDisponibleException si prestarLibro la lanza.");
+
+        assertEquals(mensajeErrorEsperado, exception.getMessage(), "El mensaje de la excepción no coincide.");
+
+        verify(sistemaPrestamosMock).prestarLibro(isbnNoDisponible);
+
+        Usuario usuario = gestionUsuarios.buscarUsuarioPorNombre(nombreUsuarioExistente).orElse(null);
+        assertNotNull(usuario, "El usuario registrado no debería ser nulo.");
+        assertTrue(usuario.getHistorialPrestamos().isEmpty(), "El historial del usuario debería estar vacío si el préstamo falló.");
+    }
+
 
 }
