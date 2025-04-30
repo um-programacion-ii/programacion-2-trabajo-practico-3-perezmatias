@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -40,6 +40,34 @@ class GestionUsuariosTest {
     void setUp() {
         libroPrueba = new Libro(isbnPrueba, "Libro para Test", "Autor Test");
         prestamoPrueba = new Prestamo(libroPrueba);
+    }
+
+    @Test
+    @DisplayName("registrarPrestamo funciona correctamente en caso de éxito")
+    void testRegistrarPrestamoExitoso() {
+        String nombreUsuarioExistente = "UsuarioRegistrado";
+        String isbnValido = "111-VALIDO";
+        Libro libroPrestado = new Libro(isbnValido, "Libro Prestado por Mock", "Mock Autor");
+        Prestamo prestamoSimulado = new Prestamo(libroPrestado);
+
+        assertDoesNotThrow(() -> gestionUsuarios.registrarUsuario(nombreUsuarioExistente));
+
+        when(sistemaPrestamosMock.prestarLibro(isbnValido)).thenReturn(prestamoSimulado);
+
+        assertDoesNotThrow(() -> {
+            gestionUsuarios.registrarPrestamo(nombreUsuarioExistente, isbnValido);
+        });
+
+        verify(sistemaPrestamosMock).prestarLibro(isbnValido);
+
+        Optional<Usuario> usuarioOpt = gestionUsuarios.buscarUsuarioPorNombre(nombreUsuarioExistente);
+        assertTrue(usuarioOpt.isPresent(), "El usuario de prueba debería existir.");
+        Usuario usuarioActualizado = usuarioOpt.get();
+
+        assertNotNull(usuarioActualizado.getHistorialPrestamos(), "El historial de préstamos no debería ser nulo.");
+        assertEquals(1, usuarioActualizado.getHistorialPrestamos().size(), "El historial debería contener 1 préstamo.");
+        assertTrue(usuarioActualizado.getHistorialPrestamos().contains(prestamoSimulado), "El historial debería contener el préstamo simulado.");
+
     }
 
 }
