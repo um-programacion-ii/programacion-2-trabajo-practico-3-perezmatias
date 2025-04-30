@@ -35,4 +35,35 @@ class CatalogoTest {
         }
     }
 
+    @Test
+    @DisplayName("Agregar un libro nuevo al catálogo funciona correctamente")
+    void testAgregarLibroExitoso() {
+        Libro libroNuevo = new Libro("978-4", "Libro Nuevo", "Autor Nuevo");
+        int cantidadInicial = catalogo.obtenerTodosLosLibros().size();
+
+        assertDoesNotThrow(() -> {
+            catalogo.agregarLibro(libroNuevo);
+        }, "Agregar un libro válido no debería lanzar excepción.");
+
+        Libro libroEncontrado = catalogo.buscarPorIsbn("978-4");
+        assertNotNull(libroEncontrado, "El libro nuevo debería encontrarse en el catálogo después de agregarlo.");
+        assertEquals(libroNuevo, libroEncontrado, "El libro encontrado debería ser el mismo que se agregó.");
+        assertEquals(cantidadInicial + 1, catalogo.obtenerTodosLosLibros().size(), "La cantidad de libros debería haber aumentado en 1.");
+    }
+
+    @Test
+    @DisplayName("Agregar un libro con ISBN duplicado lanza IllegalArgumentException")
+    void testAgregarLibroDuplicadoLanzaExcepcion() {
+        String isbnDuplicado = libro1_disponible.getIsbn();
+        Libro libroDuplicado = new Libro(isbnDuplicado, "Otro Título", "Otro Autor");
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            catalogo.agregarLibro(libroDuplicado);
+        }, "Debería lanzarse IllegalArgumentException al agregar un ISBN duplicado.");
+
+        assertTrue(exception.getMessage().contains(isbnDuplicado), "El mensaje de excepción debería contener el ISBN duplicado.");
+
+        assertEquals(3, catalogo.obtenerTodosLosLibros().size(), "La cantidad de libros no debería cambiar si falla la adición.");
+    }
+
 }
