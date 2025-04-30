@@ -194,8 +194,148 @@ Cada etapa debe ser entregada a través de un Pull Request que incluya:
 3. Documentación de los cambios realizados
 4. Evidencia de que las pruebas pasan correctamente
 
+## 📝 Resumen de Cambios por Issue
+
+A continuación se detallan las principales implementaciones y modificaciones realizadas para cada Issue del proyecto, siguiendo los milestones definidos:
+
+### Milestone 1: Configuración Inicial y Pruebas Básicas
+
+* **Issue #1: Configuración inicial del proyecto Maven**
+    * Se creó la estructura del proyecto Maven.
+    * Se configuró el archivo `pom.xml` para utilizar **Java 21**.
+    * Se añadieron las dependencias requeridas para **JUnit 5 (5.9.2)** (API, Engine, Params) y **Mockito (5.3.1)** (Core, JUnit Jupiter) con el scope `test`.
+    * Se configuraron los plugins `maven-compiler-plugin` (para Java 21) y `maven-surefire-plugin` (para ejecutar tests JUnit 5).
+    * Se creó el archivo `.gitignore` para excluir la carpeta `target/` y archivos de IDE.
+
+* **Issue #2: Implementación de la clase Libro**
+    * Se creó el paquete `com.biblioteca.modelo`.
+    * Se definió el `enum EstadoLibro` con valores `DISPONIBLE` y `PRESTADO`.
+    * Se implementó la clase `Libro` con atributos privados (`isbn`, `titulo`, `autor`, `estado`), constructor público (con validaciones y estado inicial `DISPONIBLE`), getters públicos y un setter público `setEstado(EstadoLibro)`. Se incluyeron `equals`, `hashCode` y `toString`.
+
+* **Issue #3: Pruebas unitarias básicas para Libro**
+    * Se creó el paquete `com.biblioteca.modelo` en `src/test/java`.
+    * Se implementó la clase de prueba `LibroTest` utilizando JUnit 5.
+    * Se añadieron tests (`@Test`) para verificar:
+        * La correcta creación e inicialización de un `Libro` (`testCrearLibroValido`).
+        * El funcionamiento del método `setEstado` (`testCambiarEstadoLibroAPrestado`, `testCambiarEstadoLibroADisponible`).
+        * El lanzamiento de excepciones por el constructor con argumentos inválidos (`testCrearLibroIsbnNuloLanzaExcepcion`, `testCrearLibroTituloVacioLanzaExcepcion`).
+    * Se verificó que todas las pruebas pasan con `mvn test`.
+
+### Milestone 2: Implementación del Catálogo
+
+* **Issue #4: Implementación de la clase Catalogo**
+    * Se creó el paquete `com.biblioteca.servicio`.
+    * Se implementó la clase `Catalogo` con un `Map<String, Libro>` interno (clave=ISBN).
+    * Se implementó `agregarLibro(Libro)` lanzando `IllegalArgumentException` si el ISBN está duplicado.
+    * Se implementó `buscarPorIsbn(String)` devolviendo `Libro` o `null`.
+    * Se implementó `obtenerTodosLosLibrosDisponibles()` utilizando Streams para filtrar por `EstadoLibro.DISPONIBLE`.
+    * Se añadió método auxiliar `obtenerTodosLosLibros()`.
+
+* **Issue #5: Pruebas unitarias para Catalogo**
+    * Se creó la clase de prueba `CatalogoTest` en `src/test/java/com/biblioteca/servicio`.
+    * Se utilizó `@BeforeEach` para configurar un `Catalogo` con libros de prueba (disponibles y prestados).
+    * Se implementaron tests (`@Test`) para `agregarLibro` (éxito y duplicado con `assertThrows`).
+    * Se implementaron tests (`@Test`) para `buscarPorIsbn` (encontrado con `assertNotNull`/`assertEquals`, y no encontrado con `assertNull`).
+    * Se implementaron tests (`@Test`) para `obtenerTodosLosLibrosDisponibles`, verificando el tamaño y contenido de la lista resultante en diferentes escenarios (con disponibles, sin disponibles, catálogo vacío).
+    * Se verificó que todas las pruebas pasan.
+
+### Milestone 3: Sistema de Préstamos
+
+* **Issue #6: Implementación de la clase Prestamo**
+    * Se implementó la clase `Prestamo` en `com.biblioteca.modelo` con atributos `libro` (Libro) y `fechaPrestamo` (LocalDate, asignada automáticamente). Se incluyó constructor, getters, `equals`, `hashCode` y `toString`.
+
+* **Issue #7: Implementación de SistemaPrestamos**
+    * Se creó el paquete `com.biblioteca.excepciones`.
+    * Se definieron las excepciones `LibroNoEncontradoException` y `LibroNoDisponibleException` (extendiendo `RuntimeException`).
+    * Se implementó la clase `SistemaPrestamos` en `com.biblioteca.servicio` con dependencia `Catalogo` inyectada vía constructor.
+    * Se implementó la lógica del método `prestarLibro(String isbn)`: busca en `Catalogo`, valida disponibilidad (lanza excepciones personalizadas si no se encuentra o no está disponible), cambia el estado del `Libro` a `PRESTADO`, crea y devuelve un objeto `Prestamo`.
+
+* **Issue #8: Pruebas con Mocks para SistemaPrestamos**
+    * Se creó la clase de prueba `SistemaPrestamosTest` configurada con Mockito (`@ExtendWith`, `@Mock`, `@InjectMocks`) para simular `Catalogo`.
+    * Se implementó test para `prestarLibro` exitoso: usando `when/thenReturn` para el mock, verificando el `Prestamo` devuelto, el cambio de estado del libro y la interacción con el mock (`verify`).
+    * Se implementaron tests para `prestarLibro` con libro no encontrado: usando `when/thenReturn(null)` en el mock y `assertThrows(LibroNoEncontradoException.class)`.
+    * Se implementaron tests para `prestarLibro` con libro no disponible: usando `when/thenReturn` con un libro en estado `PRESTADO` y `assertThrows(LibroNoDisponibleException.class)`.
+    * Se verificó que todas las pruebas pasan.
+
+### Milestone 4: Sistema de Usuarios
+
+* **Issue #9: Implementación de la clase Usuario**
+    * Se implementó la clase `Usuario` en `com.biblioteca.modelo` con atributos `nombre` y `historialPrestamos` (`List<Prestamo>`).
+    * Se implementó constructor, getter para nombre, getter para historial (con copia defensiva) y método `agregarPrestamoAlHistorial`.
+
+* **Issue #10: Implementación de GestionUsuarios**
+    * Se definió la excepción `UsuarioNoEncontradoException`.
+    * Se implementó la clase `GestionUsuarios` en `com.biblioteca.servicio` con dependencia `SistemaPrestamos` inyectada y mapa interno para usuarios (clave=nombre).
+    * Se implementó `registrarUsuario(String nombre)` con manejo de nombres duplicados (lanzando `IllegalArgumentException`).
+    * Se implementó `registrarPrestamo(String nombreUsuario, String isbn)`: busca usuario (lanza `UsuarioNoEncontradoException`), llama a `sistemaPrestamos.prestarLibro`, relanza excepciones (`LibroNoEncontrado`, `LibroNoDisponible`), y si tiene éxito, añade `Prestamo` al historial del `Usuario`. Se añadió método auxiliar `buscarUsuarioPorNombre`.
+
+* **Issue #11: Pruebas con múltiples mocks para GestionUsuarios**
+    * Se creó la clase de prueba `GestionUsuariosTest` configurada con Mockito para simular `SistemaPrestamos`.
+    * Se implementó test para `registrarPrestamo` exitoso, verificando la llamada al mock (`verify`) y la actualización del historial del usuario.
+    * Se implementó test para `registrarPrestamo` con usuario no encontrado (`assertThrows`).
+    * Se implementaron tests para `registrarPrestamo` verificando el correcto manejo (relanzamiento) de `LibroNoEncontradoException` y `LibroNoDisponibleException` cuando son lanzadas por el mock de `SistemaPrestamos` (usando `when/thenThrow` y `assertThrows`).
+    * Se verificó que todas las pruebas pasan.
+
+## ✅ Evidencia de Pruebas Superadas
+
+Todas las pruebas unitarias implementadas para las clases `Libro`, `Catalogo` y `GestionUsuarios` pasan correctamente en la versión final del proyecto en la rama `main`.
+
+La ejecución de `mvn test` produce la siguiente salida resumen:
+```
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.biblioteca.modelo.LibroTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.064 s -- in com.biblioteca.modelo.LibroTest
+[INFO] Running com.biblioteca.servicio.SistemaPrestamosTest
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (/home/maag_perez/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.4/byte-buddy-agent-1.14.4.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+INFO: Libro 'Libro Disponible para Mock' cambiado a estado PRESTADO.
+INFO: Préstamo creado para 'Libro Disponible para Mock'.
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.029 s -- in com.biblioteca.servicio.SistemaPrestamosTest
+[INFO] Running com.biblioteca.servicio.GestionUsuariosTest
+INFO: Usuario 'UsuarioRegistrado' registrado exitosamente.
+INFO: Préstamo (Libro: 111-VALIDO) registrado en el historial de Usuario: UsuarioRegistrado
+INFO: Usuario 'UsuarioParaTestExcepcion2' registrado exitosamente.
+Error al intentar prestar libro para el usuario 'UsuarioParaTestExcepcion2': Mock: Libro no disponible ISBN: ISBN-NO-DISPONIBLE
+INFO: Usuario 'UsuarioParaTestExcepcion' registrado exitosamente.
+Error al intentar prestar libro para el usuario 'UsuarioParaTestExcepcion': Mock: Libro no encontrado ISBN: ISBN-QUE-FALLA
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.109 s -- in com.biblioteca.servicio.GestionUsuariosTest
+[INFO] Running com.biblioteca.servicio.CatalogoTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.030 s -- in com.biblioteca.servicio.CatalogoTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.994 s
+[INFO] Finished at: 2025-04-30T11:10:08-03:00
+[INFO] ------------------------------------------------------------------------
+```
+
 ## Consideraciones Éticas sobre el Uso de IA
 El uso de Inteligencia Artificial (IA) como herramienta de asistencia en el desarrollo de software es una práctica cada vez más común. Sin embargo, es importante considerar los siguientes aspectos éticos:
+
+## Uso de Asistencia de IA (Google Gemini)
+
+Siguiendo las pautas de integridad académica y transparencia establecidas para este trabajo práctico, se declara el uso de la herramienta de inteligencia artificial Google Gemini como asistente durante el desarrollo.
+
+La asistencia de IA se utilizó específicamente en las siguientes áreas:
+
+* **Resolución de Errores:** Ayuda en la identificación y corrección de errores de compilación y runtime encontrados durante la codificación.
+* **Estructuración de Tareas:** Sugerencias para organizar y describir los Issues de GitHub correspondientes a cada etapa del desarrollo.
+* **Estructura del Proyecto:** Recomendaciones sobre la adopción de la estructura estándar de paquetes y carpetas para proyectos Java (`src/main/java`, etc.).
+* **Guía y Planificación:** Asistencia en la interpretación inicial de los requisitos y en la planificación del desarrollo de las funcionalidades solicitadas.
+
+**Autoría del Código:**
+
+Es importante destacar que **el codigo presentado y logica utilizada son de autoria propia**. La IA funcionó como una herramienta de apoyo para superar bloqueos (errores), organizar el trabajo y obtener guía sobre convenciones estándar.
 
 1. **Transparencia y Honestidad**
    - Declarar el uso de IA en el desarrollo del trabajo
